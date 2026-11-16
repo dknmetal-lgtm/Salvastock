@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        /* OCULTAR EL CARTEL DE NETLIFY */
+        /* Ocultar el cartel de Netlify */
         #netlify-badge, .netlify-badge, 
         iframe[src*="netlify.com"], 
         a[href*="netlify.com"][target="_blank"],
@@ -28,6 +28,7 @@
             --edit: #2ed573;
             --danger: #ff4757;
             --catalog: #1e90ff;
+            --duplicate: #8e44ad;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
         body { background: var(--bg); color: #333; overflow-x: hidden; font-size: 16px; }
@@ -40,7 +41,7 @@
         .logo-placeholder img { width: 100%; height: 100%; object-fit: cover; }
 
         /* Menú Lateral */
-        .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100vh; background: var(--white); box-shadow: 2px 0 15px rgba(0,0,0,0.1); transition: 0.3s ease-in-out; z-index: 2000; padding-top: 20px; display: flex; flex-direction: column; }
+        .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100vh; background: var(--white); box-shadow: 2px 0 15px rgba(0,0,0,0.1); transition: 0.3s ease-in-out; z-index: 2000; padding-top: 20px; display: flex; flex-direction: column; overflow-y: auto; }
         .sidebar.open { left: 0; }
         .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 1500; }
         .sidebar-overlay.active { display: block; }
@@ -51,7 +52,7 @@
         .sidebar button:hover { background: #f0f0f0; color: var(--primary); font-weight: 600; }
         .sidebar button.active { background: #f0f0f0; color: var(--primary); font-weight: 600; border-left: 5px solid var(--primary); }
         .divider { height: 1px; background: #eee; margin: 10px 0; }
-        .reset-btn { color: var(--danger) !important; font-weight: bold; margin-top: auto; margin-bottom: 20px;}
+        .reset-btn { color: var(--danger) !important; font-weight: bold; margin-bottom: 20px;}
 
         /* Contenido Principal */
         .container { padding: 100px 15px 30px; max-width: 600px; margin: auto; }
@@ -80,10 +81,11 @@
         .item-info small { color: #777; font-size: 0.95rem; display: block;}
         .stock-badge { background: var(--primary); color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.95rem; font-weight: 600; margin-left: auto; white-space: nowrap;}
         
-        .action-btns { display: flex; flex-direction: column; gap: 5px; margin-left: 10px;}
-        .edit-btn, .del-btn { border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; color: white; width: 45px; text-align: center;}
+        .action-btns { display: flex; flex-direction: column; gap: 4px; margin-left: 10px;}
+        .edit-btn, .del-btn, .dup-btn { border: none; padding: 9px; border-radius: 8px; cursor: pointer; font-size: 1rem; color: white; width: 40px; text-align: center;}
         .edit-btn { background: var(--edit); }
         .del-btn { background: var(--danger); }
+        .dup-btn { background: var(--duplicate); }
 
         /* Carrito de Entregas */
         .cart-section { background: #f9f9f9; border: 1px dashed #ccc; border-radius: 10px; padding: 15px; margin-top: 15px; }
@@ -128,6 +130,11 @@
         
         <div class="divider"></div>
         
+        <!-- BOTÓN DE MODELOS BASE -->
+        <button onclick="loadDefaultModels()" style="color: var(--catalog); font-weight: bold;">✨ Cargar Nombres Base</button>
+        
+        <div class="divider"></div>
+        
         <button onclick="exportToCSV()">📤 Exportar Excel (Respaldo)</button>
         <button onclick="document.getElementById('csv-import').click()">📥 Importar Excel (Restaurar)</button>
         <input type="file" id="csv-import" accept=".csv" style="display: none;" onchange="importFromCSV(event)">
@@ -135,17 +142,18 @@
         <button class="reset-btn" onclick="resetApp()">🗑️ Borrar Todos los Datos</button>
     </div>
 
+    <!-- Modal para Editar/Duplicar -->
     <div class="modal" id="editModal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal()">&times;</span>
-            <h3>Editar Producto</h3>
+            <h3 id="modal-title">Editar Producto</h3>
             <label>Nombre:</label><input type="text" id="edit-name">
             <label>Tipo:</label><select id="edit-type"><option>Remera</option><option>Taza</option><option>Buzo</option><option>Otro</option></select>
             <label>Talle:</label><input type="text" id="edit-size">
             <label>Color y Diseño:</label><input type="text" id="edit-color">
             <label>Stock Total:</label><input type="number" id="edit-stock">
             <label>Cambiar Foto (Opcional):</label><input type="file" id="edit-img" accept="image/*">
-            <button class="btn-primary" onclick="updateProduct()">Guardar Cambios</button>
+            <button class="btn-primary" onclick="saveModal()">Guardar Cambios</button>
         </div>
     </div>
 
@@ -216,6 +224,8 @@
             deliveries: JSON.parse(localStorage.getItem('ss_deliveries')) || []
         };
         let currentEditId = null;
+        let isDuplicating = false;
+        let duplicateImgSrc = '';
         let currentCart = []; 
 
         function save() {
@@ -273,6 +283,32 @@
             reader.readAsDataURL(file);
         }
 
+        function loadDefaultModels() {
+            const modelNames = [
+                "Enredadera", "Kids", "Hippie", "Psico", "Granero", 
+                "Madera", "Libertad", "Porteño", "Meduza", "Bienestar"
+            ];
+
+            let added = 0;
+            modelNames.forEach(name => {
+                const exists = db.products.some(p => p.name.toLowerCase() === name.toLowerCase());
+                if (!exists) {
+                    db.products.push({
+                        id: Date.now() + Math.random(),
+                        name: name, type: "Remera", size: "-", color: "-", stock: 0, img: ''
+                    });
+                    added++;
+                }
+            });
+
+            if (added > 0) {
+                save(); renderAll();
+                alert(`¡Listo! Se agregaron ${added} nombres base. Ahora usá el botón 👯 (Duplicar) para crear los talles.`);
+            } else {
+                alert('Los nombres base ya están cargados en tu inventario.');
+            }
+        }
+
         function addProduct() {
             const name = document.getElementById('p-name').value;
             const type = document.getElementById('p-type').value;
@@ -292,21 +328,48 @@
             if(file) { compressImage(file, saveProduct); } else { saveProduct(''); }
         }
 
+        // --- LÓGICA DE EDITAR Y DUPLICAR ---
         function openModal(id) {
+            isDuplicating = false;
             currentEditId = id;
             const prod = db.products.find(p => p.id === id);
+            
+            document.getElementById('modal-title').innerText = 'Editar Producto';
             document.getElementById('edit-name').value = prod.name;
             document.getElementById('edit-type').value = prod.type;
             document.getElementById('edit-size').value = prod.size;
             document.getElementById('edit-color').value = prod.color;
             document.getElementById('edit-stock').value = prod.stock;
             document.getElementById('edit-img').value = ''; 
+            
             document.getElementById('editModal').classList.add('open');
         }
 
-        function closeModal() { document.getElementById('editModal').classList.remove('open'); currentEditId = null; }
+        function duplicateProduct(id) {
+            isDuplicating = true;
+            const prod = db.products.find(p => p.id === id);
+            
+            document.getElementById('modal-title').innerText = 'Duplicar (Nuevo Talle)';
+            document.getElementById('edit-name').value = prod.name;
+            document.getElementById('edit-type').value = prod.type;
+            document.getElementById('edit-size').value = ''; // Blank for the new size
+            document.getElementById('edit-color').value = prod.color;
+            document.getElementById('edit-stock').value = 0; // Reset stock
+            document.getElementById('edit-img').value = ''; 
+            
+            duplicateImgSrc = prod.img; // Keep original image
+            
+            document.getElementById('editModal').classList.add('open');
+        }
 
-        function updateProduct() {
+        function closeModal() { 
+            document.getElementById('editModal').classList.remove('open'); 
+            currentEditId = null; 
+            isDuplicating = false;
+            duplicateImgSrc = '';
+        }
+
+        function saveModal() {
             const name = document.getElementById('edit-name').value;
             const type = document.getElementById('edit-type').value;
             const size = document.getElementById('edit-size').value || 'Único';
@@ -315,16 +378,29 @@
             const file = document.getElementById('edit-img').files[0];
 
             if(!name || !color) return alert('Completá nombre y color');
-            const prodIndex = db.products.findIndex(p => p.id === currentEditId);
-            if(prodIndex === -1) return;
-
+            
             const saveUpdate = (newImgData) => {
-                db.products[prodIndex].name = name; db.products[prodIndex].type = type;
-                db.products[prodIndex].size = size; db.products[prodIndex].color = color;
-                db.products[prodIndex].stock = stock;
-                if (newImgData) { db.products[prodIndex].img = newImgData; }
-                save(); renderAll(); closeModal(); alert('Producto actualizado');
+                if (isDuplicating) {
+                    // Si estamos duplicando, creamos un producto nuevo
+                    db.products.push({ 
+                        id: Date.now(), name, type, size, color, stock, 
+                        img: newImgData || duplicateImgSrc 
+                    });
+                } else {
+                    // Si estamos editando, actualizamos el existente
+                    const prodIndex = db.products.findIndex(p => p.id === currentEditId);
+                    if(prodIndex === -1) return;
+                    db.products[prodIndex].name = name; 
+                    db.products[prodIndex].type = type;
+                    db.products[prodIndex].size = size; 
+                    db.products[prodIndex].color = color;
+                    db.products[prodIndex].stock = stock;
+                    if (newImgData) { db.products[prodIndex].img = newImgData; }
+                }
+                save(); renderAll(); closeModal(); 
+                alert(isDuplicating ? 'Copia creada. Recordá cargar el stock.' : 'Producto actualizado');
             };
+
             if(file) { compressImage(file, saveUpdate); } else { saveUpdate(null); }
         }
 
@@ -527,8 +603,9 @@
                         </div>
                         <div class="stock-badge">${disponible} disp.</div>
                         <div class="action-btns">
-                            <button class="edit-btn" onclick="openModal(${p.id})">✏️</button>
-                            <button class="del-btn" onclick="deleteProduct(${p.id})">🗑️</button>
+                            <button class="edit-btn" onclick="openModal(${p.id})" title="Editar">✏️</button>
+                            <button class="dup-btn" onclick="duplicateProduct(${p.id})" title="Duplicar para otro talle">👯</button>
+                            <button class="del-btn" onclick="deleteProduct(${p.id})" title="Eliminar">🗑️</button>
                         </div>
                     </div>`;
             });
