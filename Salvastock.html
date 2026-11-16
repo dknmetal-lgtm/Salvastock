@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SalvaStock - ONG Salva Animales</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        /* OCULTAR EL CARTEL DE NETLIFY */
+        #netlify-badge, .netlify-badge, 
+        iframe[src*="netlify.com"], 
+        a[href*="netlify.com"][target="_blank"],
+        div[style*="bottom: 0px; right: 0px; z-index: 99999;"] { 
+            display: none !important; 
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+
+        :root { 
+            --primary: #000000; 
+            --bg: #f4f7f6; 
+            --white: #ffffff;
+            --accent: #ff4757;
+            --edit: #2ed573;
+            --danger: #ff4757;
+            --catalog: #1e90ff;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        body { background: var(--bg); color: #333; overflow-x: hidden; font-size: 16px; }
+        
+        /* Cabecera */
+        header { background: var(--primary); color: var(--white); padding: 15px 20px; display: flex; align-items: center; position: fixed; width: 100%; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .menu-btn { font-size: 28px; background: none; border: none; color: white; cursor: pointer; margin-right: 15px; }
+        .header-title { font-size: 1.3rem; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .logo-placeholder { width: 40px; height: 40px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .logo-placeholder img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Menú Lateral */
+        .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100vh; background: var(--white); box-shadow: 2px 0 15px rgba(0,0,0,0.1); transition: 0.3s ease-in-out; z-index: 2000; padding-top: 20px; display: flex; flex-direction: column; }
+        .sidebar.open { left: 0; }
+        .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 1500; }
+        .sidebar-overlay.active { display: block; }
+        .sidebar-header { padding: 0 20px 20px; border-bottom: 1px solid #eee; margin-bottom: 10px; }
+        .sidebar-header h2 { font-size: 1.4rem; color: var(--primary); }
+        .sidebar-header small { font-size: 0.9rem; color: #777; }
+        .sidebar button { width: 100%; padding: 15px 20px; text-align: left; background: none; border: none; font-size: 1.05rem; color: #555; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
+        .sidebar button:hover { background: #f0f0f0; color: var(--primary); font-weight: 600; }
+        .sidebar button.active { background: #f0f0f0; color: var(--primary); font-weight: 600; border-left: 5px solid var(--primary); }
+        .divider { height: 1px; background: #eee; margin: 10px 0; }
+        .reset-btn { color: var(--danger) !important; font-weight: bold; margin-top: auto; margin-bottom: 20px;}
+
+        /* Contenido Principal */
+        .container { padding: 100px 15px 30px; max-width: 600px; margin: auto; }
+        .tab-content { display: none; animation: fadeIn 0.4s; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Tarjetas y Formularios */
+        .card { background: var(--white); padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .card h3 { margin-bottom: 15px; font-size: 1.3rem; color: var(--primary); }
+        
+        input, select { width: 100%; padding: 14px 15px; margin: 8px 0; border: 1px solid #e0e0e0; border-radius: 10px; font-size: 1.1rem; background: #fafafa; transition: 0.3s; }
+        input:focus, select:focus { border-color: var(--primary); outline: none; background: #fff; }
+        
+        button.btn-primary { width: 100%; padding: 16px; background: var(--primary); color: var(--white); border: none; border-radius: 10px; font-weight: 600; font-size: 1.1rem; margin-top: 10px; cursor: pointer; transition: 0.3s; }
+        button.btn-primary:active { transform: scale(0.98); background: #333; }
+        button.btn-add { background: #555; font-size: 1rem; padding: 12px; }
+        button.btn-catalog { background: var(--catalog); margin-bottom: 15px; }
+        
+        /* Listas y Productos */
+        .list-item { display: flex; align-items: center; background: #fff; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .list-item img { width: 70px; height: 70px; object-fit: cover; border-radius: 10px; margin-right: 15px; background: #eee; cursor: pointer; }
+        
+        .item-info { flex-grow: 1; padding-right: 10px;}
+        .item-info strong { display: block; font-size: 1.15rem; color: #222; line-height: 1.2; margin-bottom: 3px; }
+        .item-info small { color: #777; font-size: 0.95rem; display: block;}
+        .stock-badge { background: var(--primary); color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.95rem; font-weight: 600; margin-left: auto; white-space: nowrap;}
+        
+        .action-btns { display: flex; flex-direction: column; gap: 5px; margin-left: 10px;}
+        .edit-btn, .del-btn { border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; color: white; width: 45px; text-align: center;}
+        .edit-btn { background: var(--edit); }
+        .del-btn { background: var(--danger); }
+
+        /* Carrito de Entregas */
+        .cart-section { background: #f9f9f9; border: 1px dashed #ccc; border-radius: 10px; padding: 15px; margin-top: 15px; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding: 12px 0; font-size: 1rem; }
+        .cart-item:last-child { border-bottom: none; }
+        .cart-item button { background: none; border: none; color: var(--danger); font-size: 1.4rem; cursor: pointer; }
+
+        /* Modales */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3000; justify-content: center; align-items: center; }
+        .modal.open { display: flex; }
+        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; position: relative; max-height: 90vh; overflow-y: auto; }
+        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 30px; cursor: pointer; color: #999; z-index: 10;}
+        .modal-content h3 { margin-bottom: 15px; font-size: 1.3rem;}
+        .modal-content label { text-align: left; display: block; font-size: 1rem; color: #555; margin-top: 10px; font-weight: 600; }
+
+        #imageModal { background: rgba(0,0,0,0.95); z-index: 4000; align-items: center; justify-content: center; }
+        #imageModal .close-btn { color: white; font-size: 40px; top: 20px; right: 25px; }
+        #expandedImg { max-width: 95%; max-height: 85vh; border-radius: 10px; box-shadow: 0 0 20px rgba(255,255,255,0.2); object-fit: contain; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <button class="menu-btn" onclick="toggleMenu()">☰</button>
+        <div class="header-title">
+            <div class="logo-placeholder">
+                <img src="logo.png" alt="Logo" onerror="this.style.display='none'; this.parentElement.innerHTML='🐾';">
+            </div>
+            SalvaStock
+        </div>
+    </header>
+
+    <div class="sidebar-overlay" onclick="toggleMenu()" id="overlay"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>Salva Animales</h2>
+            <small>Gestión de Stock</small>
+        </div>
+        <button onclick="showTab('stock')" class="active" id="btn-stock">📦 Inventario</button>
+        <button onclick="showTab('vets')" id="btn-vets">🏥 Puntos de Venta</button>
+        <button onclick="showTab('deliveries')" id="btn-deliveries">🚚 Entregas y PDF</button>
+        
+        <div class="divider"></div>
+        
+        <button onclick="exportToCSV()">📤 Exportar Excel (Respaldo)</button>
+        <button onclick="document.getElementById('csv-import').click()">📥 Importar Excel (Restaurar)</button>
+        <input type="file" id="csv-import" accept=".csv" style="display: none;" onchange="importFromCSV(event)">
+        
+        <button class="reset-btn" onclick="resetApp()">🗑️ Borrar Todos los Datos</button>
+    </div>
+
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h3>Editar Producto</h3>
+            <label>Nombre:</label><input type="text" id="edit-name">
+            <label>Tipo:</label><select id="edit-type"><option>Remera</option><option>Taza</option><option>Buzo</option><option>Otro</option></select>
+            <label>Talle:</label><input type="text" id="edit-size">
+            <label>Color y Diseño:</label><input type="text" id="edit-color">
+            <label>Stock Total:</label><input type="number" id="edit-stock">
+            <label>Cambiar Foto (Opcional):</label><input type="file" id="edit-img" accept="image/*">
+            <button class="btn-primary" onclick="updateProduct()">Guardar Cambios</button>
+        </div>
+    </div>
+
+    <div class="modal" id="imageModal" onclick="closeImageModal()">
+        <span class="close-btn">&times;</span>
+        <img id="expandedImg" src="" alt="Foto ampliada">
+    </div>
+
+    <div class="container">
+        <div id="tab-stock" class="tab-content active">
+            <button class="btn-primary btn-catalog" onclick="generateCatalogPDF()">📄 Generar Catálogo PDF para Clientes</button>
+
+            <div class="card">
+                <h3>Agregar Producto</h3>
+                <input type="text" id="p-name" placeholder="Nombre (Ej: Remera Huella)">
+                <select id="p-type"><option>Remera</option><option>Taza</option><option>Buzo</option><option>Otro</option></select>
+                <input type="text" id="p-size" placeholder="Talle (Ej: M, XL, Único)">
+                <input type="text" id="p-color" placeholder="Color y Diseño">
+                <input type="number" id="p-stock" placeholder="Stock Inicial (Cantidad)">
+                <input type="file" id="p-img" accept="image/*">
+                <button class="btn-primary" onclick="addProduct()">Guardar Producto</button>
+            </div>
+            <h3>Mi Inventario</h3>
+            <div id="stock-list"></div>
+        </div>
+
+        <div id="tab-vets" class="tab-content">
+            <div class="card">
+                <h3>Agregar Punto de Venta</h3>
+                <input type="text" id="v-name" placeholder="Nombre del Local">
+                <input type="text" id="v-contact" placeholder="Nombre y Apellido">
+                <input type="text" id="v-phone" placeholder="Teléfono">
+                <input type="text" id="v-address" placeholder="Dirección">
+                <button class="btn-primary" onclick="addVet()">Guardar Punto</button>
+            </div>
+            <h3>Locales Aliados</h3>
+            <div id="vets-list"></div>
+        </div>
+
+        <div id="tab-deliveries" class="tab-content">
+            <div class="card">
+                <h3>Registrar Entrega</h3>
+                <label style="font-size:1rem; font-weight:600; color:#555;">1. Elegí la Veterinaria:</label>
+                <select id="d-vet" style="margin-bottom: 15px;"></select>
+
+                <label style="font-size:1rem; font-weight:600; color:#555;">2. Agregá los productos:</label>
+                <select id="d-product"></select>
+                <div style="display: flex; gap: 10px;">
+                    <input type="number" id="d-qty" placeholder="Cant." min="1" style="width: 35%; margin: 0;">
+                    <button class="btn-primary btn-add" onclick="addToCart()" style="width: 65%; margin: 0;">➕ Agregar a lista</button>
+                </div>
+
+                <div class="cart-section" id="cart-container" style="display:none;">
+                    <h4 style="font-size:1rem; margin-bottom:10px;">Productos a entregar:</h4>
+                    <div id="cart-list"></div>
+                </div>
+                <button class="btn-primary" style="background: var(--accent); margin-top: 20px;" onclick="confirmDelivery()">✅ Confirmar y Generar PDF</button>
+            </div>
+            <h3>Historial de Entregas</h3>
+            <div id="deliveries-list"></div>
+        </div>
+    </div>
+
+    <script>
+        let db = {
+            products: JSON.parse(localStorage.getItem('ss_products')) || [],
+            vets: JSON.parse(localStorage.getItem('ss_vets')) || [],
+            deliveries: JSON.parse(localStorage.getItem('ss_deliveries')) || []
+        };
+        let currentEditId = null;
+        let currentCart = []; 
+
+        function save() {
+            try {
+                localStorage.setItem('ss_products', JSON.stringify(db.products));
+                localStorage.setItem('ss_vets', JSON.stringify(db.vets));
+                localStorage.setItem('ss_deliveries', JSON.stringify(db.deliveries));
+            } catch (e) { alert("¡Memoria llena! Borrá algunos productos o usá 'Borrar Todos los Datos'."); }
+        }
+
+        function resetApp() {
+            if(confirm("¿Borrar TODOS los datos? Esta acción no se puede deshacer.")) {
+                localStorage.clear(); location.reload();
+            }
+        }
+
+        function toggleMenu() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('overlay').classList.toggle('active');
+        }
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.sidebar button').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            document.getElementById(`btn-${tabId}`).classList.add('active');
+            toggleMenu();
+            renderAll();
+        }
+
+        function openImageModal(src) {
+            document.getElementById('expandedImg').src = src;
+            document.getElementById('imageModal').classList.add('open');
+        }
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.remove('open');
+            document.getElementById('expandedImg').src = '';
+        }
+
+        function compressImage(file, callback) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width; let height = img.height; const maxSize = 600;
+                    if (width > height) { if (width > maxSize) { height *= maxSize / width; width = maxSize; } } 
+                    else { if (height > maxSize) { width *= maxSize / height; height = maxSize; } }
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
+                    callback(canvas.toDataURL('image/jpeg', 0.7));
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function addProduct() {
+            const name = document.getElementById('p-name').value;
+            const type = document.getElementById('p-type').value;
+            const size = document.getElementById('p-size').value || 'Único';
+            const color = document.getElementById('p-color').value;
+            const stock = parseInt(document.getElementById('p-stock').value) || 0;
+            const file = document.getElementById('p-img').files[0];
+
+            if(!name || !color) return alert('Completá nombre y color/diseño');
+
+            const saveProduct = (imgData) => {
+                db.products.push({ id: Date.now(), name, type, size, color, stock, img: imgData });
+                save(); renderAll();
+                document.getElementById('p-name').value = ''; document.getElementById('p-size').value = ''; document.getElementById('p-color').value = ''; document.getElementById('p-stock').value = ''; document.getElementById('p-img').value = '';
+                alert('Producto guardado exitosamente');
+            };
+            if(file) { compressImage(file, saveProduct); } else { saveProduct(''); }
+        }
+
+        function openModal(id) {
+            currentEditId = id;
+            const prod = db.products.find(p => p.id === id);
+            document.getElementById('edit-name').value = prod.name;
+            document.getElementById('edit-type').value = prod.type;
+            document.getElementById('edit-size').value = prod.size;
+            document.getElementById('edit-color').value = prod.color;
+            document.getElementById('edit-stock').value = prod.stock;
+            document.getElementById('edit-img').value = ''; 
+            document.getElementById('editModal').classList.add('open');
+        }
+
+        function closeModal() { document.getElementById('editModal').classList.remove('open'); currentEditId = null; }
+
+        function updateProduct() {
+            const name = document.getElementById('edit-name').value;
+            const type = document.getElementById('edit-type').value;
+            const size = document.getElementById('edit-size').value || 'Único';
+            const color = document.getElementById('edit-color').value;
+            const stock = parseInt(document.getElementById('edit-stock').value) || 0;
+            const file = document.getElementById('edit-img').files[0];
+
+            if(!name || !color) return alert('Completá nombre y color');
+            const prodIndex = db.products.findIndex(p => p.id === currentEditId);
+            if(prodIndex === -1) return;
+
+            const saveUpdate = (newImgData) => {
+                db.products[prodIndex].name = name; db.products[prodIndex].type = type;
+                db.products[prodIndex].size = size; db.products[prodIndex].color = color;
+                db.products[prodIndex].stock = stock;
+                if (newImgData) { db.products[prodIndex].img = newImgData; }
+                save(); renderAll(); closeModal(); alert('Producto actualizado');
+            };
+            if(file) { compressImage(file, saveUpdate); } else { saveUpdate(null); }
+        }
+
+        function deleteProduct(id) {
+            if(confirm("¿Eliminar este producto del inventario?")) {
+                db.products = db.products.filter(p => p.id !== id);
+                save(); renderAll();
+            }
+        }
+
+        function addVet() {
+            const name = document.getElementById('v-name').value;
+            const contact = document.getElementById('v-contact').value;
+            const phone = document.getElementById('v-phone').value;
+            const address = document.getElementById('v-address').value;
+            if(!name) return alert('Poné el nombre del local');
+            db.vets.push({ id: Date.now(), name, contact, phone, address });
+            save(); renderAll();
+            document.getElementById('v-name').value = ''; document.getElementById('v-contact').value = ''; document.getElementById('v-phone').value = ''; document.getElementById('v-address').value = '';
+            alert('Punto de venta guardado');
+        }
+
+        function addToCart() {
+            const prodId = document.getElementById('d-product').value;
+            const qty = parseInt(document.getElementById('d-qty').value);
+            if(!prodId || !qty || qty <= 0) return alert('Elegí un producto y una cantidad válida');
+
+            const prod = db.products.find(p => p.id == prodId);
+            const entregado = db.deliveries.filter(d => d.prodId == prodId).reduce((sum, d) => sum + d.qty, 0);
+            const enCarrito = currentCart.filter(c => c.prodId == prodId).reduce((sum, c) => sum + c.qty, 0);
+            const stockDisponible = prod.stock - entregado - enCarrito;
+
+            if(qty > stockDisponible) return alert(`No hay stock suficiente. Solo te quedan ${stockDisponible} disponibles.`);
+
+            currentCart.push({ prodId: prod.id, qty: qty, name: prod.name, type: prod.type, size: prod.size, color: prod.color });
+            renderCart();
+            document.getElementById('d-qty').value = '';
+        }
+
+        function removeFromCart(index) { currentCart.splice(index, 1); renderCart(); }
+
+        function renderCart() {
+            const container = document.getElementById('cart-container');
+            const list = document.getElementById('cart-list');
+            if(currentCart.length === 0) { container.style.display = 'none'; return; }
+            container.style.display = 'block'; list.innerHTML = '';
+            currentCart.forEach((item, index) => {
+                list.innerHTML += `<div class="cart-item"><div><strong>${item.qty}x</strong> ${item.name} (${item.size}) - ${item.color}</div><button onclick="removeFromCart(${index})">❌</button></div>`;
+            });
+        }
+
+        function confirmDelivery() {
+            const vetId = document.getElementById('d-vet').value;
+            if(!vetId) return alert('Primero seleccioná una Veterinaria');
+            if(currentCart.length === 0) return alert('Agregá al menos un producto');
+
+            const vet = db.vets.find(v => v.id == vetId);
+            const groupId = Date.now(); const dateStr = new Date().toLocaleDateString();
+
+            currentCart.forEach(item => {
+                db.deliveries.push({ id: Date.now() + Math.random(), groupId: groupId, date: dateStr, vetId: vet.id, vetName: vet.name, prodId: item.prodId, prodName: item.name, prodSize: item.size, prodColor: item.color, prodType: item.type, qty: item.qty });
+            });
+
+            save(); generatePDF(vet, currentCart, dateStr);
+            currentCart = []; renderCart(); renderAll(); document.getElementById('d-vet').value = '';
+            alert('Entrega registrada. PDF generado.');
+        }
+
+        function generatePDF(vet, cartItems, dateStr) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFillColor(0, 0, 0); doc.rect(0, 0, 210, 30, 'F');
+            doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(20);
+            doc.text("SALVA ANIMALES ONG", 105, 18, null, null, "center");
+            doc.setTextColor(0, 0, 0); doc.setFontSize(14);
+            doc.text("Comprobante de Entrega en Consignación", 105, 45, null, null, "center");
+            doc.setFont("helvetica", "normal"); doc.setFontSize(11);
+            doc.text(`Fecha: ${dateStr}`, 20, 60); doc.text(`Local: ${vet.name}`, 20, 70);
+            doc.text(`Contacto: ${vet.contact || '-'}`, 20, 75); doc.text(`Dirección: ${vet.address || '-'}`, 20, 80);
+            doc.text(`Teléfono: ${vet.phone || '-'}`, 20, 85);
+            doc.setDrawColor(200, 200, 200); doc.line(20, 95, 190, 95);
+            doc.setFont("helvetica", "bold"); doc.text("Detalle de mercadería entregada:", 20, 105);
+            
+            let y = 115; doc.setFont("helvetica", "normal");
+            cartItems.forEach(item => {
+                doc.text(`- ${item.qty} u. de ${item.name} (${item.type}) - Talle: ${item.size} - Color: ${item.color}`, 25, y);
+                y += 8; if (y > 260) { doc.addPage(); y = 20; }
+            });
+            y += 10; doc.text("Por la presente, se dejan los artículos en consignación.", 20, y);
+            doc.text("Salva Animales se compromete a retirar el dinero o el stock no vendido.", 20, y + 6);
+            y += 25; if (y > 250) { doc.addPage(); y = 20; }
+            doc.setFont("helvetica", "bold"); doc.text("Firma Local:", 20, y); doc.text("Firma Voluntario:", 120, y);
+            doc.line(20, y + 15, 80, y + 15); doc.line(120, y + 15, 180, y + 15);
+            doc.save(`Entrega_${vet.name.replace(/ /g, '_')}_${dateStr.replace(/\//g, '-')}.pdf`);
+        }
+
+        function generateCatalogPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFillColor(0, 0, 0); doc.rect(0, 0, 210, 30, 'F');
+            doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(20);
+            doc.text("SALVA ANIMALES ONG", 105, 18, null, null, "center");
+            doc.setTextColor(0, 0, 0); doc.setFontSize(16);
+            doc.text("Catálogo de Productos Disponibles", 105, 45, null, null, "center");
+            
+            let y = 60; let itemsInPage = 0;
+
+            db.products.forEach(p => {
+                const entregado = db.deliveries.filter(d => d.prodId == p.id).reduce((sum, d) => sum + d.qty, 0);
+                const disponible = p.stock - entregado;
+                if (disponible <= 0) return; 
+
+                if (y > 260) { doc.addPage(); y = 20; itemsInPage = 0; }
+
+                if (p.img) {
+                    try { doc.addImage(p.img, 'JPEG', 20, y, 40, 40); } 
+                    catch(e) { doc.rect(20, y, 40, 40); }
+                } else {
+                    doc.setDrawColor(200,200,200); doc.rect(20, y, 40, 40);
+                    doc.setFontSize(10); doc.text("Sin foto", 30, y + 22);
+                }
+
+                doc.setFontSize(14); doc.setFont("helvetica", "bold");
+                doc.text(`${p.name}`, 70, y + 10);
+                doc.setFontSize(11); doc.setFont("helvetica", "normal");
+                doc.text(`Talle: ${p.size}  |  Color: ${p.color}`, 70, y + 18);
+                doc.text(`Disponibles: ${disponible}`, 70, y + 26);
+                
+                doc.setDrawColor(240, 240, 240); doc.line(20, y + 45, 190, y + 45);
+                y += 55; itemsInPage++;
+            });
+
+            if (itemsInPage === 0 && y === 60) {
+                doc.text("No hay productos con stock disponible.", 105, 80, null, null, "center");
+            }
+            doc.save(`Catalogo_SalvaAnimales.pdf`);
+        }
+
+        function exportToCSV() {
+            if(db.products.length === 0) return alert('No hay productos para exportar');
+            let csv = "Nombre,Tipo,Talle,Color,Stock\n";
+            db.products.forEach(p => {
+                const name = `"${p.name.replace(/"/g, '""')}"`;
+                const color = `"${p.color.replace(/"/g, '""')}"`;
+                csv += `${name},${p.type},"${p.size}",${color},${p.stock}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url; a.download = "Respaldo_SalvaStock.csv"; a.click();
+            alert('Respaldo descargado. Podés abrirlo con Excel.');
+        }
+
+        function importFromCSV(event) {
+            const file = event.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split('\n');
+                let imported = 0;
+                for(let i=1; i<lines.length; i++) {
+                    if(!lines[i].trim()) continue;
+                    const row = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+                    if(row && row.length >= 5) {
+                        const clean = (str) => str ? str.replace(/^"|"$/g, '').replace(/""/g, '"') : '';
+                        db.products.push({
+                            id: Date.now() + Math.random(),
+                            name: clean(row[0]), type: clean(row[1]) || 'Remera',
+                            size: clean(row[2]) || 'Único', color: clean(row[3]),
+                            stock: parseInt(clean(row[4])) || 0, img: ''
+                        });
+                        imported++;
+                    }
+                }
+                save(); renderAll();
+                document.getElementById('csv-import').value = '';
+                alert(`¡Éxito! Se importaron ${imported} productos. (Recordá agregar las fotos manualmente).`);
+            };
+            reader.readAsText(file);
+        }
+
+        function renderAll() {
+            const stockList = document.getElementById('stock-list'); stockList.innerHTML = '';
+            if(db.products.length === 0) stockList.innerHTML = '<p style="text-align:center; color:#999; font-size:1.1rem;">No hay productos cargados aún.</p>';
+            
+            db.products.forEach(p => {
+                const entregado = db.deliveries.filter(d => d.prodId == p.id).reduce((sum, d) => sum + d.qty, 0);
+                const disponible = p.stock - entregado;
+                const imgHTML = p.img 
+                    ? `<img src="${p.img}" onclick="openImageModal('${p.img}')">` 
+                    : '<div style="width:70px;height:70px;background:#eee;border-radius:10px;margin-right:15px;display:flex;align-items:center;justify-content:center;font-size:30px;">📦</div>';
+
+                stockList.innerHTML += `
+                    <div class="list-item">
+                        ${imgHTML}
+                        <div class="item-info">
+                            <strong>${p.name}</strong>
+                            <small>Talle: ${p.size} | ${p.color}</small>
+                        </div>
+                        <div class="stock-badge">${disponible} disp.</div>
+                        <div class="action-btns">
+                            <button class="edit-btn" onclick="openModal(${p.id})">✏️</button>
+                            <button class="del-btn" onclick="deleteProduct(${p.id})">🗑️</button>
+                        </div>
+                    </div>`;
+            });
+
+            const vetsList = document.getElementById('vets-list'); vetsList.innerHTML = '';
+            if(db.vets.length === 0) vetsList.innerHTML = '<p style="text-align:center; color:#999; font-size:1.1rem;">No hay locales cargados aún.</p>';
+            db.vets.forEach(v => {
+                vetsList.innerHTML += `<div class="list-item"><div class="item-info"><strong>${v.name}</strong><small>📞 ${v.phone || 'Sin teléfono'}<br>📍 ${v.address || 'Sin dirección'}</small></div></div>`;
+            });
+
+            const delList = document.getElementById('deliveries-list'); delList.innerHTML = '';
+            if(db.deliveries.length === 0) delList.innerHTML = '<p style="text-align:center; color:#999; font-size:1.1rem;">No hay entregas registradas.</p>';
+            
+            const groups = {};
+            db.deliveries.forEach(d => {
+                if(!groups[d.groupId]) groups[d.groupId] = { vetName: d.vetName, date: d.date, items: [] };
+                groups[d.groupId].items.push(`${d.qty}x ${d.prodName} (${d.prodSize})`);
+            });
+
+            Object.values(groups).reverse().forEach(g => {
+                delList.innerHTML += `
+                    <div class="list-item">
+                        <div class="item-info">
+                            <strong>${g.vetName}</strong>
+                            <small style="color:#999;">${g.date}</small><br>
+                            <small>${g.items.join(' | ')}</small>
+                        </div>
+                    </div>`;
+            });
+
+            const vetSelect = document.getElementById('d-vet');
+            const prodSelect = document.getElementById('d-product');
+            vetSelect.innerHTML = '<option value="">Seleccioná Local...</option>' + db.vets.map(v => `<option value="${v.id}">${v.name}</option>`).join('');
+            prodSelect.innerHTML = '<option value="">Seleccioná Producto...</option>' + db.products.map(p => {
+                const entregado = db.deliveries.filter(d => d.prodId == p.id).reduce((sum, d) => sum + d.qty, 0);
+                const disp = p.stock - entregado;
+                return `<option value="${p.id}">${p.name} (T:${p.size}) - Stock: ${disp}</option>`;
+            }).join('');
+        }
+
+        renderAll();
+    </script>
+</body>
+</html>
