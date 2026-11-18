@@ -328,7 +328,6 @@
             if(file) { compressImage(file, saveProduct); } else { saveProduct(''); }
         }
 
-        // --- LÓGICA DE EDITAR Y DUPLICAR ---
         function openModal(id) {
             isDuplicating = false;
             currentEditId = id;
@@ -352,12 +351,12 @@
             document.getElementById('modal-title').innerText = 'Duplicar (Nuevo Talle)';
             document.getElementById('edit-name').value = prod.name;
             document.getElementById('edit-type').value = prod.type;
-            document.getElementById('edit-size').value = ''; // Blank for the new size
+            document.getElementById('edit-size').value = ''; 
             document.getElementById('edit-color').value = prod.color;
-            document.getElementById('edit-stock').value = 0; // Reset stock
+            document.getElementById('edit-stock').value = 0; 
             document.getElementById('edit-img').value = ''; 
             
-            duplicateImgSrc = prod.img; // Keep original image
+            duplicateImgSrc = prod.img; 
             
             document.getElementById('editModal').classList.add('open');
         }
@@ -381,13 +380,11 @@
             
             const saveUpdate = (newImgData) => {
                 if (isDuplicating) {
-                    // Si estamos duplicando, creamos un producto nuevo
                     db.products.push({ 
                         id: Date.now(), name, type, size, color, stock, 
                         img: newImgData || duplicateImgSrc 
                     });
                 } else {
-                    // Si estamos editando, actualizamos el existente
                     const prodIndex = db.products.findIndex(p => p.id === currentEditId);
                     if(prodIndex === -1) return;
                     db.products[prodIndex].name = name; 
@@ -511,7 +508,7 @@
             db.products.forEach(p => {
                 const entregado = db.deliveries.filter(d => d.prodId == p.id).reduce((sum, d) => sum + d.qty, 0);
                 const disponible = p.stock - entregado;
-                if (disponible <= 0) return; 
+                if (disponible <= 0) return; // Solo mostramos si hay al menos 1 en stock
 
                 if (y > 260) { doc.addPage(); y = 20; itemsInPage = 0; }
 
@@ -526,8 +523,8 @@
                 doc.setFontSize(14); doc.setFont("helvetica", "bold");
                 doc.text(`${p.name}`, 70, y + 10);
                 doc.setFontSize(11); doc.setFont("helvetica", "normal");
-                doc.text(`Talle: ${p.size}  |  Color: ${p.color}`, 70, y + 18);
-                doc.text(`Disponibles: ${disponible}`, 70, y + 26);
+                doc.text(`Talle: ${p.size}  |  Color: ${p.color}`, 70, y + 20); // Ajusté un poco la altura
+                // LÍNEA DE CANTIDAD ELIMINADA ACÁ
                 
                 doc.setDrawColor(240, 240, 240); doc.line(20, y + 45, 190, y + 45);
                 y += 55; itemsInPage++;
