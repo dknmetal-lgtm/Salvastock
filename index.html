@@ -112,8 +112,8 @@
         <button class="menu-btn" onclick="toggleMenu()">☰</button>
         <div class="header-title">
             <div class="logo-placeholder">
-                <!-- Busca el logo.png en la misma carpeta -->
-                <img src="logo.png" alt="Logo" onerror="this.style.display='none'; this.parentElement.innerHTML='🐾';">
+                <!-- Ahora busca logo.jpg -->
+                <img src="logo.jpg" alt="Logo" onerror="this.style.display='none'; this.parentElement.innerHTML='🐾';">
             </div>
             SalvaStock
         </div>
@@ -226,17 +226,17 @@
         let isDuplicating = false;
         let duplicateImgSrc = '';
         let currentCart = []; 
-        let logoData = ''; // Variable para guardar el logo en Base64
+        let logoData = ''; 
 
-        // --- CARGAR LOGO PARA EL PDF ---
+        // --- CARGAR LOGO PARA EL PDF (Ahora busca logo.jpg) ---
         const img = new Image();
-        img.src = 'logo.png'; // Nombre del archivo en GitHub
+        img.src = 'logo.jpg'; 
         img.onload = function() {
             const canvas = document.createElement('canvas');
             canvas.width = img.width;
             canvas.height = img.height;
             canvas.getContext('2d').drawImage(img, 0, 0);
-            logoData = canvas.toDataURL('image/png');
+            logoData = canvas.toDataURL('image/jpeg');
         };
 
         function save() {
@@ -477,20 +477,17 @@
             alert('Entrega registrada. PDF generado.');
         }
 
-        // --- PDF DE ENTREGA CON LOGO ---
         function generatePDF(vet, cartItems, dateStr) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             
             doc.setFillColor(0, 0, 0); doc.rect(0, 0, 210, 30, 'F');
             
-            // Insertar Logo en el PDF
             if (logoData) {
-                doc.addImage(logoData, 'PNG', 15, 4, 22, 22); // x, y, ancho, alto
+                doc.addImage(logoData, 'JPEG', 15, 4, 22, 22); 
             }
 
             doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(20);
-            // Ajustamos el texto un poco a la derecha para que no choque con el logo
             doc.text("SALVA ANIMALES ONG", 115, 18, null, null, "center");
             
             doc.setTextColor(0, 0, 0); doc.setFontSize(14);
@@ -515,16 +512,14 @@
             doc.save(`Entrega_${vet.name.replace(/ /g, '_')}_${dateStr.replace(/\//g, '-')}.pdf`);
         }
 
-        // --- CATÁLOGO CON LOGO ---
         function generateCatalogPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             
             doc.setFillColor(0, 0, 0); doc.rect(0, 0, 210, 30, 'F');
             
-            // Insertar Logo en el Catálogo
             if (logoData) {
-                doc.addImage(logoData, 'PNG', 15, 4, 22, 22);
+                doc.addImage(logoData, 'JPEG', 15, 4, 22, 22);
             }
 
             doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(20);
