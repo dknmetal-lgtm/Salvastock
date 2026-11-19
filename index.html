@@ -8,28 +8,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         /* Ocultar el cartel de Netlify */
-        #netlify-badge, .netlify-badge, 
-        iframe[src*="netlify.com"], 
-        a[href*="netlify.com"][target="_blank"],
-        div[style*="bottom: 0px; right: 0px; z-index: 99999;"] { 
-            display: none !important; 
-            visibility: hidden !important;
-            opacity: 0 !important;
-            pointer-events: none !important;
-            width: 0 !important;
-            height: 0 !important;
-        }
+        #netlify-badge, .netlify-badge, iframe[src*="netlify.com"], a[href*="netlify.com"][target="_blank"], div[style*="bottom: 0px; right: 0px; z-index: 99999;"] { display: none !important; }
 
         :root { 
-            --primary: #000000; 
-            --bg: #f4f7f6; 
-            --white: #ffffff;
-            --accent: #ff4757;
-            --edit: #2ed573;
-            --danger: #ff4757;
-            --catalog: #1e90ff;
-            --duplicate: #8e44ad;
-            --return: #e67e22;
+            --primary: #000000; --bg: #f4f7f6; --white: #ffffff;
+            --accent: #ff4757; --edit: #2ed573; --danger: #ff4757;
+            --catalog: #1e90ff; --duplicate: #8e44ad; --return: #e67e22;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
         body { background: var(--bg); color: #333; overflow-x: hidden; font-size: 16px; }
@@ -74,26 +58,26 @@
         button.btn-catalog { background: var(--catalog); margin-bottom: 15px; }
         button.btn-return { background: var(--return); }
         
-        /* Listas y Productos */
-        .list-item { display: flex; align-items: center; background: #fff; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-        .list-item img { width: 70px; height: 70px; object-fit: cover; border-radius: 10px; margin-right: 15px; background: #eee; cursor: pointer; }
+        /* DISEÑO DE TARJETAS AGRUPADAS (INVENTARIO) */
+        .design-card { background: #fff; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; overflow: hidden; border: 1px solid #eee; }
+        .design-header { display: flex; align-items: center; padding: 15px; background: #fafafa; border-bottom: 1px solid #eee; }
+        .design-header img { width: 80px; height: 80px; object-fit: cover; border-radius: 12px; margin-right: 15px; cursor: pointer; background: #eee; }
+        .design-header .info { flex-grow: 1; }
+        .design-header h4 { font-size: 1.3rem; color: var(--primary); margin-bottom: 3px; }
+        .design-header p { font-size: 0.9rem; color: #777; }
         
-        .item-info { flex-grow: 1; padding-right: 10px;}
-        .item-info strong { display: block; font-size: 1.15rem; color: #222; line-height: 1.2; margin-bottom: 3px; }
-        .item-info small { color: #777; font-size: 0.95rem; display: block;}
-        .stock-badge { background: var(--primary); color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.95rem; font-weight: 600; margin-left: auto; white-space: nowrap;}
+        .variants-list { padding: 10px 15px; }
+        .variant-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px dashed #eee; }
+        .variant-row:last-child { border-bottom: none; }
+        .variant-info { font-size: 1.05rem; color: #333; }
+        .variant-info strong { color: var(--primary); font-size: 1.1rem; }
+        .variant-stock { font-weight: 600; color: #2ed573; font-size: 1.1rem; margin-left: 10px; }
+        .variant-actions { display: flex; gap: 5px; }
         
-        .action-btns { display: flex; flex-direction: column; gap: 4px; margin-left: 10px;}
-        .edit-btn, .del-btn, .dup-btn { border: none; padding: 9px; border-radius: 8px; cursor: pointer; font-size: 1rem; color: white; width: 40px; text-align: center;}
+        .icon-btn { border: none; padding: 8px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; color: white; width: 35px; text-align: center;}
         .edit-btn { background: var(--edit); }
         .del-btn { background: var(--danger); }
         .dup-btn { background: var(--duplicate); }
-
-        /* Carrito de Entregas */
-        .cart-section { background: #f9f9f9; border: 1px dashed #ccc; border-radius: 10px; padding: 15px; margin-top: 15px; }
-        .cart-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding: 12px 0; font-size: 1rem; }
-        .cart-item:last-child { border-bottom: none; }
-        .cart-item button { background: none; border: none; color: var(--danger); font-size: 1.4rem; cursor: pointer; }
 
         /* Modales */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3000; justify-content: center; align-items: center; }
@@ -106,6 +90,11 @@
         #imageModal { background: rgba(0,0,0,0.95); z-index: 4000; align-items: center; justify-content: center; }
         #imageModal .close-btn { color: white; font-size: 40px; top: 20px; right: 25px; }
         #expandedImg { max-width: 95%; max-height: 85vh; border-radius: 10px; box-shadow: 0 0 20px rgba(255,255,255,0.2); object-fit: contain; }
+
+        /* Carrito de Entregas */
+        .cart-section { background: #f9f9f9; border: 1px dashed #ccc; border-radius: 10px; padding: 15px; margin-top: 15px; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding: 12px 0; font-size: 1rem; }
+        .cart-item button { background: none; border: none; color: var(--danger); font-size: 1.4rem; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -113,9 +102,7 @@
     <header>
         <button class="menu-btn" onclick="toggleMenu()">☰</button>
         <div class="header-title">
-            <div class="logo-placeholder">
-                <img src="logo.png" alt="Logo" onerror="this.style.display='none'; this.parentElement.innerHTML='🐾';">
-            </div>
+            <div class="logo-placeholder"><img src="logo.png" alt="Logo" onerror="this.style.display='none'; this.parentElement.innerHTML='🐾';"></div>
             SalvaStock
         </div>
     </header>
@@ -129,30 +116,34 @@
         <button onclick="showTab('stock')" class="active" id="btn-stock">📦 Inventario</button>
         <button onclick="showTab('vets')" id="btn-vets">🏥 Puntos de Venta</button>
         <button onclick="showTab('deliveries')" id="btn-deliveries">🚚 Entregas</button>
-        <!-- NUEVA PESTAÑA -->
         <button onclick="showTab('returns')" id="btn-returns" style="color: var(--return); font-weight: bold;">🔄 Devoluciones y Cambios</button>
         
         <div class="divider"></div>
-        
         <button onclick="loadDefaultModels()" style="color: var(--catalog); font-weight: bold;">✨ Cargar Nombres Base</button>
-        
         <div class="divider"></div>
-        
         <button onclick="exportToCSV()">📤 Exportar Excel (Respaldo)</button>
         <button onclick="document.getElementById('csv-import').click()">📥 Importar Excel (Restaurar)</button>
         <input type="file" id="csv-import" accept=".csv" style="display: none;" onchange="importFromCSV(event)">
-        
         <button class="reset-btn" onclick="resetApp()">🗑️ Borrar Todos los Datos</button>
     </div>
 
+    <!-- Modal Editar/Duplicar -->
     <div class="modal" id="editModal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal()">&times;</span>
             <h3 id="modal-title">Editar Producto</h3>
-            <label>Nombre:</label><input type="text" id="edit-name">
+            <label>Nombre del Diseño:</label><input type="text" id="edit-name">
             <label>Tipo:</label><select id="edit-type"><option>Remera</option><option>Taza</option><option>Buzo</option><option>Otro</option></select>
-            <label>Talle:</label><input type="text" id="edit-size">
-            <label>Color y Diseño:</label><input type="text" id="edit-color">
+            <label>Talle:</label>
+            <select id="edit-size">
+                <option value="S">S</option><option value="M">M</option><option value="L">L</option>
+                <option value="XL">XL</option><option value="XXL">XXL</option><option value="Único">Único</option>
+            </select>
+            <label>Color:</label>
+            <select id="edit-color">
+                <option value="Negra">Negra</option><option value="Blanca">Blanca</option>
+                <option value="-">-</option>
+            </select>
             <label>Stock Total:</label><input type="number" id="edit-stock">
             <label>Cambiar Foto (Opcional):</label><input type="file" id="edit-img" accept="image/*">
             <button class="btn-primary" onclick="saveModal()">Guardar Cambios</button>
@@ -169,16 +160,29 @@
         <div id="tab-stock" class="tab-content active">
             <button class="btn-primary btn-catalog" onclick="generateCatalogPDF()">📄 Generar Catálogo PDF para Clientes</button>
             <div class="card">
-                <h3>Agregar Producto</h3>
-                <input type="text" id="p-name" placeholder="Nombre (Ej: Remera Huella)">
+                <h3>Agregar Nuevo Diseño</h3>
+                <input type="text" id="p-name" placeholder="Nombre (Ej: Enredadera)">
                 <select id="p-type"><option>Remera</option><option>Taza</option><option>Buzo</option><option>Otro</option></select>
-                <input type="text" id="p-size" placeholder="Talle (Ej: M, XL, Único)">
-                <input type="text" id="p-color" placeholder="Color y Diseño">
-                <input type="number" id="p-stock" placeholder="Stock Inicial (Cantidad)">
+                <div style="display: flex; gap: 10px;">
+                    <div style="width: 50%;">
+                        <label style="font-size:0.8rem;">Talle:</label>
+                        <select id="p-size">
+                            <option value="S">S</option><option value="M">M</option><option value="L">L</option>
+                            <option value="XL">XL</option><option value="XXL">XXL</option><option value="Único">Único</option>
+                        </select>
+                    </div>
+                    <div style="width: 50%;">
+                        <label style="font-size:0.8rem;">Color:</label>
+                        <select id="p-color">
+                            <option value="Negra">Negra</option><option value="Blanca">Blanca</option><option value="-">-</option>
+                        </select>
+                    </div>
+                </div>
+                <input type="number" id="p-stock" placeholder="Stock Inicial">
                 <input type="file" id="p-img" accept="image/*">
-                <button class="btn-primary" onclick="addProduct()">Guardar Producto</button>
+                <button class="btn-primary" onclick="addProduct()">Guardar Diseño y Talle</button>
             </div>
-            <h3>Mi Inventario</h3>
+            <h3>Mi Inventario (Agrupado)</h3>
             <div id="stock-list"></div>
         </div>
 
@@ -216,16 +220,14 @@
                 </div>
                 <button class="btn-primary" style="background: var(--accent); margin-top: 20px;" onclick="confirmDelivery()">✅ Confirmar y Generar PDF</button>
             </div>
-            
             <h3>Historial de Entregas</h3>
             <div id="deliveries-list"></div>
         </div>
 
-        <!-- NUEVA PESTAÑA: DEVOLUCIONES Y CAMBIOS -->
+        <!-- DEVOLUCIONES -->
         <div id="tab-returns" class="tab-content">
             <div class="card">
                 <h3>Registrar Devolución / Cambio</h3>
-                
                 <label style="font-size:1rem; font-weight:600; color:#555;">1. ¿Qué local devuelve? :</label>
                 <select id="r-vet" style="margin-bottom: 15px;"></select>
 
@@ -237,13 +239,12 @@
 
                 <div style="background: #fff8f0; padding: 10px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid var(--accent);">
                     <label style="font-size:1rem; font-weight:600; color:#555;">3. Producto que ENTREGAS a cambio (Opcional):</label>
-                    <select id="r-prod-out"><option value="">--- No entrego nada a cambio (solo devolución) ---</option></select>
+                    <select id="r-prod-out"><option value="">--- No entrego nada a cambio ---</option></select>
                     <input type="number" id="r-qty-out" placeholder="Cantidad entregada a cambio" min="1">
                 </div>
 
                 <button class="btn-primary btn-return" onclick="processReturn()">🔄 Registrar y Generar PDF</button>
             </div>
-            
             <h3>Historial de Devoluciones</h3>
             <div id="returns-list"></div>
         </div>
@@ -254,7 +255,7 @@
             products: JSON.parse(localStorage.getItem('ss_products')) || [],
             vets: JSON.parse(localStorage.getItem('ss_vets')) || [],
             deliveries: JSON.parse(localStorage.getItem('ss_deliveries')) || [],
-            returns: JSON.parse(localStorage.getItem('ss_returns')) || [] // Nuevo array
+            returns: JSON.parse(localStorage.getItem('ss_returns')) || []
         };
         let currentEditId = null;
         let isDuplicating = false;
@@ -262,13 +263,11 @@
         let currentCart = []; 
         let logoData = ''; 
 
-        // --- CARGAR LOGO ---
         const img = new Image();
         img.src = 'logo.png'; 
         img.onload = function() {
             const canvas = document.createElement('canvas');
-            canvas.width = img.width;
-            canvas.height = img.height;
+            canvas.width = img.width; canvas.height = img.height;
             canvas.getContext('2d').drawImage(img, 0, 0);
             logoData = canvas.toDataURL('image/png');
         };
@@ -282,34 +281,18 @@
             } catch (e) { alert("¡Memoria llena! Borrá algunos productos o usá 'Borrar Todos los Datos'."); }
         }
 
-        function resetApp() {
-            if(confirm("¿Borrar TODOS los datos? Esta acción no se puede deshacer.")) {
-                localStorage.clear(); location.reload();
-            }
-        }
-
-        function toggleMenu() {
-            document.getElementById('sidebar').classList.toggle('open');
-            document.getElementById('overlay').classList.toggle('active');
-        }
-
+        function resetApp() { if(confirm("¿Borrar TODOS los datos?")) { localStorage.clear(); location.reload(); } }
+        function toggleMenu() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('active'); }
         function showTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.sidebar button').forEach(el => el.classList.remove('active'));
             document.getElementById(`tab-${tabId}`).classList.add('active');
             document.getElementById(`btn-${tabId}`).classList.add('active');
-            toggleMenu();
-            renderAll();
+            toggleMenu(); renderAll();
         }
 
-        function openImageModal(src) {
-            document.getElementById('expandedImg').src = src;
-            document.getElementById('imageModal').classList.add('open');
-        }
-        function closeImageModal() {
-            document.getElementById('imageModal').classList.remove('open');
-            document.getElementById('expandedImg').src = '';
-        }
+        function openImageModal(src) { document.getElementById('expandedImg').src = src; document.getElementById('imageModal').classList.add('open'); }
+        function closeImageModal() { document.getElementById('imageModal').classList.remove('open'); document.getElementById('expandedImg').src = ''; }
 
         function compressImage(file, callback) {
             const reader = new FileReader();
@@ -318,8 +301,7 @@
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
                     let width = img.width; let height = img.height; const maxSize = 600;
-                    if (width > height) { if (width > maxSize) { height *= maxSize / width; width = maxSize; } } 
-                    else { if (height > maxSize) { width *= maxSize / height; height = maxSize; } }
+                    if (width > height) { if (width > maxSize) { height *= maxSize / width; width = maxSize; } } else { if (height > maxSize) { width *= maxSize / height; height = maxSize; } }
                     canvas.width = width; canvas.height = height;
                     const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
                     callback(canvas.toDataURL('image/jpeg', 0.7));
@@ -329,151 +311,32 @@
             reader.readAsDataURL(file);
         }
 
-        // --- LÓGICA DE DEVOLUCIONES Y CAMBIOS ---
-        function processReturn() {
-            const vetId = document.getElementById('r-vet').value;
-            const prodInId = document.getElementById('r-prod-in').value;
-            const qtyIn = parseInt(document.getElementById('r-qty-in').value);
-            
-            const prodOutId = document.getElementById('r-prod-out').value;
-            const qtyOut = parseInt(document.getElementById('r-qty-out').value);
-
-            if(!vetId) return alert('Seleccioná el local');
-            if(!prodInId || !qtyIn || qtyIn <= 0) return alert('Completá el producto devuelto y la cantidad');
-
-            const vet = db.vets.find(v => v.id == vetId);
-            const prodIn = db.products.find(p => p.id == prodInId);
-            
-            // Registrar la devolución (Ingreso a stock)
-            db.returns.push({
-                id: Date.now(),
-                date: new Date().toLocaleDateString(),
-                vetId: vet.id,
-                vetName: vet.name,
-                prodId: prodIn.id,
-                prodName: prodIn.name,
-                qty: qtyIn
-            });
-
-            let prodOut = null;
-            // Si hay cambio, registramos una entrega (Egreso de stock)
-            if(prodOutId && qtyOut > 0) {
-                prodOut = db.products.find(p => p.id == prodOutId);
-                
-                // Verificar stock del producto que se entrega
-                const entregado = db.deliveries.filter(d => d.prodId == prodOutId).reduce((sum, d) => sum + d.qty, 0);
-                const devuelto = db.returns.filter(r => r.prodId == prodOutId).reduce((sum, r) => sum + r.qty, 0);
-                const stockDisponible = prodOut.stock - entregado + devuelto;
-
-                if(qtyOut > stockDisponible) return alert(`No hay stock suficiente de ${prodOut.name}. Solo tenés ${stockDisponible}.`);
-
-                db.deliveries.push({
-                    id: Date.now() + 1,
-                    groupId: Date.now(), // Un ID único para este cambio
-                    date: new Date().toLocaleDateString(),
-                    vetId: vet.id,
-                    vetName: vet.name,
-                    prodId: prodOut.id,
-                    prodName: prodOut.name,
-                    prodSize: prodOut.size,
-                    prodColor: prodOut.color,
-                    prodType: prodOut.type,
-                    qty: qtyOut
-                });
-            }
-
-            save(); renderAll();
-            generateReturnPDF(vet, prodIn, qtyIn, prodOut, qtyOut);
-            
-            // Limpiar campos
-            document.getElementById('r-qty-in').value = '';
-            document.getElementById('r-qty-out').value = '';
-            document.getElementById('r-prod-out').value = '';
-            alert('Operación registrada con éxito.');
-        }
-
-        function deleteDelivery(groupId) {
-            if(confirm("¿Eliminar esta entrega? El stock se actualizará.")) {
-                db.deliveries = db.deliveries.filter(d => d.groupId !== groupId);
-                save(); renderAll();
-            }
-        }
-
-        function deleteReturn(id) {
-            if(confirm("¿Eliminar esta devolución? El stock se actualizará.")) {
-                db.returns = db.returns.filter(r => r.id !== id);
-                save(); renderAll();
-            }
-        }
-
-        function generateReturnPDF(vet, prodIn, qtyIn, prodOut, qtyOut) {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            const dateStr = new Date().toLocaleDateString();
-
-            doc.setFillColor(0, 0, 0); doc.rect(0, 0, 210, 30, 'F');
-            if (logoData) { doc.addImage(logoData, 'PNG', 15, 4, 22, 22); }
-            doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(20);
-            doc.text("SALVA ANIMALES ONG", 115, 18, null, null, "center");
-            
-            doc.setTextColor(0, 0, 0); doc.setFontSize(14);
-            doc.text("Comprobante de Devolución / Cambio", 105, 45, null, null, "center");
-            
-            doc.setFont("helvetica", "normal"); doc.setFontSize(11);
-            doc.text(`Fecha: ${dateStr}`, 20, 60); doc.text(`Local: ${vet.name}`, 20, 70);
-            doc.text(`Contacto: ${vet.contact || '-'}`, 20, 75);
-            
-            doc.setDrawColor(200, 200, 200); doc.line(20, 85, 190, 85);
-            
-            doc.setFont("helvetica", "bold"); doc.setFontSize(12);
-            doc.text("MERCADERÍA RECIBIDA (Devuelta a la ONG):", 20, 95);
-            doc.setFont("helvetica", "normal"); doc.setFontSize(11);
-            doc.text(`- ${qtyIn} u. de ${prodIn.name} (Talle: ${prodIn.size} - ${prodIn.color})`, 25, 105);
-
-            if (prodOut && qtyOut > 0) {
-                doc.setFont("helvetica", "bold"); doc.setFontSize(12);
-                doc.text("MERCADERÍA ENTREGADA A CAMBIO:", 20, 125);
-                doc.setFont("helvetica", "normal"); doc.setFontSize(11);
-                doc.text(`- ${qtyOut} u. de ${prodOut.name} (Talle: ${prodOut.size} - ${prodOut.color})`, 25, 135);
-            }
-
-            doc.setFontSize(11);
-            doc.text("Firma Local:", 20, 170); doc.text("Firma Voluntario:", 120, 170);
-            doc.line(20, 185, 80, 185); doc.line(120, 185, 180, 185);
-
-            doc.save(`Devolucion_${vet.name.replace(/ /g, '_')}_${dateStr.replace(/\//g, '-')}.pdf`);
-        }
-
-        // --- RESTO DE LAS FUNCIONES (Productos, Veterinarias, etc.) ---
         function loadDefaultModels() {
             const modelNames = ["Enredadera", "Kids", "Hippie", "Psico", "Granero", "Madera", "Libertad", "Porteño", "Meduza", "Bienestar"];
             let added = 0;
             modelNames.forEach(name => {
                 const exists = db.products.some(p => p.name.toLowerCase() === name.toLowerCase());
-                if (!exists) {
-                    db.products.push({ id: Date.now() + Math.random(), name: name, type: "Remera", size: "-", color: "-", stock: 0, img: '' });
-                    added++;
-                }
+                if (!exists) { db.products.push({ id: Date.now() + Math.random(), name: name, type: "Remera", size: "S", color: "Negra", stock: 0, img: '' }); added++; }
             });
-            if (added > 0) { save(); renderAll(); alert(`¡Listo! Se agregaron ${added} nombres base.`); } 
-            else { alert('Los nombres base ya están cargados.'); }
+            if (added > 0) { save(); renderAll(); alert(`Se agregaron ${added} nombres base.`); } else { alert('Ya están cargados.'); }
         }
 
+        // --- NUEVA LÓGICA DE AGREGAR ---
         function addProduct() {
             const name = document.getElementById('p-name').value;
             const type = document.getElementById('p-type').value;
-            const size = document.getElementById('p-size').value || 'Único';
+            const size = document.getElementById('p-size').value;
             const color = document.getElementById('p-color').value;
             const stock = parseInt(document.getElementById('p-stock').value) || 0;
             const file = document.getElementById('p-img').files[0];
 
-            if(!name || !color) return alert('Completá nombre y color/diseño');
+            if(!name) return alert('Completá el nombre del diseño');
 
             const saveProduct = (imgData) => {
                 db.products.push({ id: Date.now(), name, type, size, color, stock, img: imgData });
                 save(); renderAll();
-                document.getElementById('p-name').value = ''; document.getElementById('p-size').value = ''; document.getElementById('p-color').value = ''; document.getElementById('p-stock').value = ''; document.getElementById('p-img').value = '';
-                alert('Producto guardado');
+                document.getElementById('p-name').value = ''; document.getElementById('p-stock').value = ''; document.getElementById('p-img').value = '';
+                alert('Diseño y talle guardados exitosamente');
             };
             if(file) { compressImage(file, saveProduct); } else { saveProduct(''); }
         }
@@ -481,7 +344,7 @@
         function openModal(id) {
             isDuplicating = false; currentEditId = id;
             const prod = db.products.find(p => p.id === id);
-            document.getElementById('modal-title').innerText = 'Editar Producto';
+            document.getElementById('modal-title').innerText = 'Editar Talle';
             document.getElementById('edit-name').value = prod.name; document.getElementById('edit-type').value = prod.type;
             document.getElementById('edit-size').value = prod.size; document.getElementById('edit-color').value = prod.color;
             document.getElementById('edit-stock').value = prod.stock; document.getElementById('edit-img').value = ''; 
@@ -493,7 +356,7 @@
             const prod = db.products.find(p => p.id === id);
             document.getElementById('modal-title').innerText = 'Duplicar (Nuevo Talle)';
             document.getElementById('edit-name').value = prod.name; document.getElementById('edit-type').value = prod.type;
-            document.getElementById('edit-size').value = ''; document.getElementById('edit-color').value = prod.color;
+            document.getElementById('edit-size').value = 'S'; document.getElementById('edit-color').value = prod.color;
             document.getElementById('edit-stock').value = 0; document.getElementById('edit-img').value = ''; 
             duplicateImgSrc = prod.img; 
             document.getElementById('editModal').classList.add('open');
@@ -503,10 +366,10 @@
 
         function saveModal() {
             const name = document.getElementById('edit-name').value; const type = document.getElementById('edit-type').value;
-            const size = document.getElementById('edit-size').value || 'Único'; const color = document.getElementById('edit-color').value;
+            const size = document.getElementById('edit-size').value; const color = document.getElementById('edit-color').value;
             const stock = parseInt(document.getElementById('edit-stock').value) || 0; const file = document.getElementById('edit-img').files[0];
 
-            if(!name || !color) return alert('Completá nombre y color');
+            if(!name) return alert('Completá nombre');
             
             const saveUpdate = (newImgData) => {
                 if (isDuplicating) {
@@ -519,34 +382,58 @@
                     db.products[prodIndex].stock = stock;
                     if (newImgData) { db.products[prodIndex].img = newImgData; }
                 }
-                save(); renderAll(); closeModal(); alert(isDuplicating ? 'Copia creada.' : 'Producto actualizado');
+                save(); renderAll(); closeModal(); alert(isDuplicating ? 'Talle duplicado.' : 'Actualizado');
             };
             if(file) { compressImage(file, saveUpdate); } else { saveUpdate(null); }
         }
 
         function deleteProduct(id) {
-            if(confirm("¿Eliminar este producto?")) { db.products = db.products.filter(p => p.id !== id); save(); renderAll(); }
+            if(confirm("¿Eliminar este talle?")) { db.products = db.products.filter(p => p.id !== id); save(); renderAll(); }
         }
 
+        // --- RESTO DE FUNCIONES (VETERINARIAS, ENTREGAS, DEVOLUCIONES) ---
         function addVet() {
             const name = document.getElementById('v-name').value; const contact = document.getElementById('v-contact').value;
             const phone = document.getElementById('v-phone').value; const address = document.getElementById('v-address').value;
-            if(!name) return alert('Poné el nombre del local');
-            db.vets.push({ id: Date.now(), name, contact, phone, address });
-            save(); renderAll();
+            if(!name) return alert('Poné el nombre');
+            db.vets.push({ id: Date.now(), name, contact, phone, address }); save(); renderAll();
             document.getElementById('v-name').value = ''; document.getElementById('v-contact').value = ''; document.getElementById('v-phone').value = ''; document.getElementById('v-address').value = '';
-            alert('Punto de venta guardado');
+            alert('Local guardado');
         }
+
+        function processReturn() {
+            const vetId = document.getElementById('r-vet').value; const prodInId = document.getElementById('r-prod-in').value;
+            const qtyIn = parseInt(document.getElementById('r-qty-in').value); const prodOutId = document.getElementById('r-prod-out').value;
+            const qtyOut = parseInt(document.getElementById('r-qty-out').value);
+
+            if(!vetId || !prodInId || !qtyIn) return alert('Completá local y producto devuelto');
+            const vet = db.vets.find(v => v.id == vetId); const prodIn = db.products.find(p => p.id == prodInId);
+            
+            db.returns.push({ id: Date.now(), date: new Date().toLocaleDateString(), vetId: vet.id, vetName: vet.name, prodId: prodIn.id, prodName: prodIn.name, qty: qtyIn });
+            let prodOut = null;
+            
+            if(prodOutId && qtyOut > 0) {
+                prodOut = db.products.find(p => p.id == prodOutId);
+                const entregado = db.deliveries.filter(d => d.prodId == prodOutId).reduce((sum, d) => sum + d.qty, 0);
+                const devuelto = db.returns.filter(r => r.prodId == prodOutId).reduce((sum, r) => sum + r.qty, 0);
+                if(qtyOut > (prodOut.stock - entregado + devuelto)) return alert(`No hay stock de ${prodOut.name}`);
+                db.deliveries.push({ id: Date.now() + 1, groupId: Date.now(), date: new Date().toLocaleDateString(), vetId: vet.id, vetName: vet.name, prodId: prodOut.id, prodName: prodOut.name, prodSize: prodOut.size, prodColor: prodOut.color, prodType: prodOut.type, qty: qtyOut });
+            }
+            save(); renderAll(); generateReturnPDF(vet, prodIn, qtyIn, prodOut, qtyOut);
+            document.getElementById('r-qty-in').value = ''; document.getElementById('r-qty-out').value = ''; document.getElementById('r-prod-out').value = '';
+        }
+
+        function deleteDelivery(groupId) { if(confirm("¿Eliminar entrega?")) { db.deliveries = db.deliveries.filter(d => d.groupId !== groupId); save(); renderAll(); } }
+        function deleteReturn(id) { if(confirm("¿Eliminar devolución?")) { db.returns = db.returns.filter(r => r.id !== id); save(); renderAll(); } }
 
         function addToCart() {
             const prodId = document.getElementById('d-product').value; const qty = parseInt(document.getElementById('d-qty').value);
-            if(!prodId || !qty || qty <= 0) return alert('Elegí un producto y una cantidad válida');
+            if(!prodId || !qty || qty <= 0) return alert('Elegí producto y cantidad');
             const prod = db.products.find(p => p.id == prodId);
             const entregado = db.deliveries.filter(d => d.prodId == prodId).reduce((sum, d) => sum + d.qty, 0);
             const devuelto = db.returns.filter(r => r.prodId == prodId).reduce((sum, r) => sum + r.qty, 0);
             const enCarrito = currentCart.filter(c => c.prodId == prodId).reduce((sum, c) => sum + c.qty, 0);
-            const stockDisponible = prod.stock - entregado + devuelto - enCarrito;
-            if(qty > stockDisponible) return alert(`No hay stock suficiente. Quedan ${stockDisponible}.`);
+            if(qty > (prod.stock - entregado + devuelto - enCarrito)) return alert(`Stock insuficiente. Quedan ${prod.stock - entregado + devuelto - enCarrito}`);
             currentCart.push({ prodId: prod.id, qty: qty, name: prod.name, type: prod.type, size: prod.size, color: prod.color });
             renderCart(); document.getElementById('d-qty').value = '';
         }
@@ -558,89 +445,98 @@
             if(currentCart.length === 0) { container.style.display = 'none'; return; }
             container.style.display = 'block'; list.innerHTML = '';
             currentCart.forEach((item, index) => {
-                list.innerHTML += `<div class="cart-item"><div><strong>${item.qty}x</strong> ${item.name} (${item.size}) - ${item.color}</div><button onclick="removeFromCart(${index})">❌</button></div>`;
+                list.innerHTML += `<div class="cart-item"><div><strong>${item.qty}x</strong> ${item.name} (T:${item.size}) - ${item.color}</div><button onclick="removeFromCart(${index})">❌</button></div>`;
             });
         }
 
         function confirmDelivery() {
             const vetId = document.getElementById('d-vet').value;
-            if(!vetId) return alert('Primero seleccioná una Veterinaria');
-            if(currentCart.length === 0) return alert('Agregá al menos un producto');
-            const vet = db.vets.find(v => v.id == vetId);
-            const groupId = Date.now(); const dateStr = new Date().toLocaleDateString();
+            if(!vetId) return alert('Seleccioná veterinaria');
+            if(currentCart.length === 0) return alert('Agregá productos');
+            const vet = db.vets.find(v => v.id == vetId); const groupId = Date.now(); const dateStr = new Date().toLocaleDateString();
             currentCart.forEach(item => {
                 db.deliveries.push({ id: Date.now() + Math.random(), groupId: groupId, date: dateStr, vetId: vet.id, vetName: vet.name, prodId: item.prodId, prodName: item.name, prodSize: item.size, prodColor: item.color, prodType: item.type, qty: item.qty });
             });
-            save(); generateDeliveryPDF(vet, currentCart, dateStr);
-            currentCart = []; renderCart(); renderAll(); document.getElementById('d-vet').value = '';
-            alert('Entrega registrada.');
+            save(); generateDeliveryPDF(vet, currentCart, dateStr); currentCart = []; renderCart(); renderAll(); document.getElementById('d-vet').value = '';
         }
 
+        // --- GENERADORES DE PDF ---
         function generateDeliveryPDF(vet, cartItems, dateStr) {
             const { jsPDF } = window.jspdf; const doc = new jsPDF();
             doc.setFillColor(0, 0, 0); doc.rect(0, 0, 210, 30, 'F');
             if (logoData) { doc.addImage(logoData, 'PNG', 15, 4, 22, 22); }
-            doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(20);
-            doc.text("SALVA ANIMALES ONG", 115, 18, null, null, "center");
-            doc.setTextColor(0, 0, 0); doc.setFontSize(14);
-            doc.text("Comprobante de Entrega en Consignación", 105, 45, null, null, "center");
+            doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(20); doc.text("SALVA ANIMALES ONG", 115, 18, null, null, "center");
+            doc.setTextColor(0, 0, 0); doc.setFontSize(14); doc.text("Comprobante de Entrega", 105, 45, null, null, "center");
             doc.setFont("helvetica", "normal"); doc.setFontSize(11);
-            doc.text(`Fecha: ${dateStr}`, 20, 60); doc.text(`Local: ${vet.name}`, 20, 70);
-            doc.text(`Contacto: ${vet.contact || '-'}`, 20, 75); doc.text(`Dirección: ${vet.address || '-'}`, 20, 80);
-            doc.text(`Teléfono: ${vet.phone || '-'}`, 20, 85);
-            doc.setDrawColor(200, 200, 200); doc.line(20, 95, 190, 95);
-            doc.setFont("helvetica", "bold"); doc.text("Detalle de mercadería entregada:", 20, 105);
-            let y = 115; doc.setFont("helvetica", "normal");
-            cartItems.forEach(item => {
-                doc.text(`- ${item.qty} u. de ${item.name} (${item.type}) - Talle: ${item.size} - Color: ${item.color}`, 25, y);
-                y += 8; if (y > 260) { doc.addPage(); y = 20; }
-            });
-            y += 10; doc.text("Por la presente, se dejan los artículos en consignación.", 20, y);
-            doc.text("Salva Animales se compromete a retirar el dinero o el stock no vendido.", 20, y + 6);
-            y += 25; if (y > 250) { doc.addPage(); y = 20; }
-            doc.setFont("helvetica", "bold"); doc.text("Firma Local:", 20, y); doc.text("Firma Voluntario:", 120, y);
-            doc.line(20, y + 15, 80, y + 15); doc.line(120, y + 15, 180, y + 15);
+            doc.text(`Fecha: ${dateStr}`, 20, 60); doc.text(`Local: ${vet.name}`, 20, 70); doc.text(`Contacto: ${vet.contact || '-'}`, 20, 75);
+            doc.setDrawColor(200, 200, 200); doc.line(20, 85, 190, 85);
+            doc.setFont("helvetica", "bold"); doc.text("Detalle:", 20, 95);
+            let y = 105; doc.setFont("helvetica", "normal");
+            cartItems.forEach(item => { doc.text(`- ${item.qty} u. de ${item.name} (T:${item.size} - ${item.color})`, 25, y); y += 8; });
+            y += 15; doc.text("Firma Local: ____________________", 20, y); doc.text("Firma Voluntario: ____________________", 120, y);
             doc.save(`Entrega_${vet.name.replace(/ /g, '_')}_${dateStr.replace(/\//g, '-')}.pdf`);
+        }
+
+        function generateReturnPDF(vet, prodIn, qtyIn, prodOut, qtyOut) {
+            const { jsPDF } = window.jspdf; const doc = new jsPDF(); const dateStr = new Date().toLocaleDateString();
+            doc.setFillColor(0, 0, 0); doc.rect(0, 0, 210, 30, 'F');
+            if (logoData) { doc.addImage(logoData, 'PNG', 15, 4, 22, 22); }
+            doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(20); doc.text("SALVA ANIMALES ONG", 115, 18, null, null, "center");
+            doc.setTextColor(0, 0, 0); doc.setFontSize(14); doc.text("Comprobante de Devolución / Cambio", 105, 45, null, null, "center");
+            doc.setFont("helvetica", "normal"); doc.setFontSize(11);
+            doc.text(`Fecha: ${dateStr}`, 20, 60); doc.text(`Local: ${vet.name}`, 20, 70); doc.text(`Contacto: ${vet.contact || '-'}`, 20, 75);
+            doc.setDrawColor(200, 200, 200); doc.line(20, 85, 190, 85);
+            doc.setFont("helvetica", "bold"); doc.text("RECIBIDO (Devuelto a ONG):", 20, 95);
+            doc.setFont("helvetica", "normal"); doc.text(`- ${qtyIn} u. de ${prodIn.name} (T:${prodIn.size} - ${prodIn.color})`, 25, 105);
+            if (prodOut && qtyOut > 0) {
+                doc.setFont("helvetica", "bold"); doc.text("ENTREGADO A CAMBIO:", 20, 125);
+                doc.setFont("helvetica", "normal"); doc.text(`- ${qtyOut} u. de ${prodOut.name} (T:${prodOut.size} - ${prodOut.color})`, 25, 135);
+            }
+            doc.setFontSize(11); doc.text("Firma Local: ____________________", 20, 170); doc.text("Firma Voluntario: ____________________", 120, 170);
+            doc.save(`Devolucion_${vet.name.replace(/ /g, '_')}_${dateStr.replace(/\//g, '-')}.pdf`);
         }
 
         function generateCatalogPDF() {
             const { jsPDF } = window.jspdf; const doc = new jsPDF();
             doc.setFillColor(0, 0, 0); doc.rect(0, 0, 210, 30, 'F');
             if (logoData) { doc.addImage(logoData, 'PNG', 15, 4, 22, 22); }
-            doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(20);
-            doc.text("SALVA ANIMALES ONG", 115, 18, null, null, "center");
-            doc.setTextColor(0, 0, 0); doc.setFontSize(16);
-            doc.text("Catálogo de Productos Disponibles", 105, 45, null, null, "center");
-            let y = 60; let itemsInPage = 0;
+            doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(20); doc.text("SALVA ANIMALES ONG", 115, 18, null, null, "center");
+            doc.setTextColor(0, 0, 0); doc.setFontSize(16); doc.text("Catálogo de Productos", 105, 45, null, null, "center");
+            
+            // Agrupar para el catálogo también
+            const grouped = {};
             db.products.forEach(p => {
                 const entregado = db.deliveries.filter(d => d.prodId == p.id).reduce((sum, d) => sum + d.qty, 0);
                 const devuelto = db.returns.filter(r => r.prodId == p.id).reduce((sum, r) => sum + r.qty, 0);
-                const disponible = p.stock - entregado + devuelto;
-                if (disponible <= 0) return;
+                if(p.stock - entregado + devuelto <= 0) return;
+                if(!grouped[p.name]) grouped[p.name] = { name: p.name, img: p.img, variants: [] };
+                grouped[p.name].variants.push(`Talle ${p.size} (${p.color})`);
+            });
+
+            let y = 60; let itemsInPage = 0;
+            Object.values(grouped).forEach(g => {
                 if (y > 260) { doc.addPage(); y = 20; itemsInPage = 0; }
-                if (p.img) { try { doc.addImage(p.img, 'JPEG', 20, y, 40, 40); } catch(e) { doc.rect(20, y, 40, 40); } } 
-                else { doc.setDrawColor(200,200,200); doc.rect(20, y, 40, 40); doc.setFontSize(10); doc.text("Sin foto", 30, y + 22); }
-                doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text(`${p.name}`, 70, y + 10);
-                doc.setFontSize(11); doc.setFont("helvetica", "normal"); doc.text(`Talle: ${p.size}  |  Color: ${p.color}`, 70, y + 20);
+                if (g.img) { try { doc.addImage(g.img, 'JPEG', 20, y, 40, 40); } catch(e) { doc.rect(20, y, 40, 40); } } 
+                else { doc.setDrawColor(200,200,200); doc.rect(20, y, 40, 40); }
+                doc.setFontSize(14); doc.setFont("helvetica", "bold"); doc.text(`${g.name}`, 70, y + 10);
+                doc.setFontSize(11); doc.setFont("helvetica", "normal"); doc.text(`Talles: ${g.variants.join(' | ')}`, 70, y + 20);
                 doc.setDrawColor(240, 240, 240); doc.line(20, y + 45, 190, y + 45);
                 y += 55; itemsInPage++;
             });
-            if (itemsInPage === 0 && y === 60) { doc.text("No hay productos con stock disponible.", 105, 80, null, null, "center"); }
+            if (itemsInPage === 0 && y === 60) doc.text("No hay productos con stock.", 105, 80, null, null, "center");
             doc.save(`Catalogo_SalvaAnimales.pdf`);
         }
 
+        // --- EXCEL Y RENDERIZADO PRINCIPAL ---
         function exportToCSV() {
-            if(db.products.length === 0) return alert('No hay productos para exportar');
+            if(db.products.length === 0) return alert('No hay productos');
             let csv = "Nombre,Tipo,Talle,Color,Stock\n";
             db.products.forEach(p => {
-                const name = `"${p.name.replace(/"/g, '""')}"`;
-                const color = `"${p.color.replace(/"/g, '""')}"`;
-                csv += `${name},${p.type},"${p.size}",${color},${p.stock}\n`;
+                csv += `"${p.name}",${p.type},"${p.size}","${p.color}",${p.stock}\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob); const a = document.createElement("a");
             a.href = url; a.download = "Respaldo_SalvaStock.csv"; a.click();
-            alert('Respaldo descargado.');
         }
 
         function importFromCSV(event) {
@@ -658,84 +554,100 @@
                     }
                 }
                 save(); renderAll(); document.getElementById('csv-import').value = '';
-                alert(`¡Éxito! Se importaron ${imported} productos.`);
+                alert(`Se importaron ${imported} productos.`);
             };
             reader.readAsText(file);
         }
 
         function renderAll() {
-            // 1. Render Stock
+            // --- RENDERIZADO AGRUPADO DEL INVENTARIO ---
             const stockList = document.getElementById('stock-list'); stockList.innerHTML = '';
-            if(db.products.length === 0) stockList.innerHTML = '<p style="text-align:center; color:#999;">No hay productos cargados.</p>';
+            if(db.products.length === 0) stockList.innerHTML = '<p style="text-align:center; color:#999;">No hay productos.</p>';
+            
+            // Agrupar por nombre de diseño
+            const grouped = {};
             db.products.forEach(p => {
+                if(!grouped[p.name]) grouped[p.name] = { name: p.name, type: p.type, img: p.img, variants: [] };
                 const entregado = db.deliveries.filter(d => d.prodId == p.id).reduce((sum, d) => sum + d.qty, 0);
-                const devuelto = db.returns.filter(r => r.prodId == p.id).reduce((sum, r) => sum + r.qty, 0); // NUEVO
-                const disponible = p.stock - entregado + devuelto; // NUEVO CALCULO
-                const imgHTML = p.img ? `<img src="${p.img}" onclick="openImageModal('${p.img}')">` : '<div style="width:70px;height:70px;background:#eee;border-radius:10px;margin-right:15px;display:flex;align-items:center;justify-content:center;font-size:30px;">📦</div>';
+                const devuelto = db.returns.filter(r => r.prodId == p.id).reduce((sum, r) => sum + r.qty, 0);
+                grouped[p.name].variants.push({ ...p, disponible: p.stock - entregado + devuelto });
+                if(p.img && !grouped[p.name].img) grouped[p.name].img = p.img; // Tomar la primera foto
+            });
+
+            // Dibujar cada tarjeta de diseño
+            Object.values(grouped).forEach(g => {
+                const imgHTML = g.img ? `<img src="${g.img}" onclick="openImageModal('${g.img}')">` : '<div style="width:80px;height:80px;background:#eee;border-radius:12px;margin-right:15px;display:flex;align-items:center;justify-content:center;font-size:30px;">📦</div>';
+                
+                let variantsHTML = '';
+                g.variants.forEach(v => {
+                    variantsHTML += `
+                        <div class="variant-row">
+                            <div class="variant-info">
+                                Talle: <strong>${v.size}</strong> <span style="color:#888; font-size:0.9rem;">(${v.color})</span>
+                                <span class="variant-stock">${v.disponible} disp.</span>
+                            </div>
+                            <div class="variant-actions">
+                                <button class="icon-btn edit-btn" onclick="openModal(${v.id})" title="Editar">✏️</button>
+                                <button class="icon-btn dup-btn" onclick="duplicateProduct(${v.id})" title="Duplicar Talle">👯</button>
+                                <button class="icon-btn del-btn" onclick="deleteProduct(${v.id})" title="Eliminar">🗑️</button>
+                            </div>
+                        </div>`;
+                });
+
                 stockList.innerHTML += `
-                    <div class="list-item">
-                        ${imgHTML}
-                        <div class="item-info"><strong>${p.name}</strong><small>Talle: ${p.size} | ${p.color}</small></div>
-                        <div class="stock-badge">${disponible} disp.</div>
-                        <div class="action-btns">
-                            <button class="edit-btn" onclick="openModal(${p.id})">✏️</button>
-                            <button class="dup-btn" onclick="duplicateProduct(${p.id})">👯</button>
-                            <button class="del-btn" onclick="deleteProduct(${p.id})">🗑️</button>
+                    <div class="design-card">
+                        <div class="design-header">
+                            ${imgHTML}
+                            <div class="info">
+                                <h4>${g.name}</h4>
+                                <p>${g.type}</p>
+                            </div>
+                        </div>
+                        <div class="variants-list">
+                            ${variantsHTML}
                         </div>
                     </div>`;
             });
 
-            // 2. Render Locales
+            // --- RESTO DE LOS RENDERS (Vets, Historial, Selects) ---
             const vetsList = document.getElementById('vets-list'); vetsList.innerHTML = '';
-            if(db.vets.length === 0) vetsList.innerHTML = '<p style="text-align:center; color:#999;">No hay locales cargados.</p>';
             db.vets.forEach(v => {
-                vetsList.innerHTML += `<div class="list-item"><div class="item-info"><strong>${v.name}</strong><small>📞 ${v.phone || 'Sin teléfono'}<br>📍 ${v.address || 'Sin dirección'}</small></div></div>`;
+                vetsList.innerHTML += `<div class="list-item" style="background:#fff; padding:15px; border-radius:12px; margin-bottom:10px; box-shadow:0 2px 8px rgba(0,0,0,0.04);"><div class="item-info"><strong>${v.name}</strong><small>📞 ${v.phone || '-'}<br>📍 ${v.address || '-'}</small></div></div>`;
             });
 
-            // 3. Render Historial Entregas (Con botón eliminar)
             const delList = document.getElementById('deliveries-list'); delList.innerHTML = '';
-            if(db.deliveries.length === 0) delList.innerHTML = '<p style="text-align:center; color:#999;">No hay entregas.</p>';
-            const groups = {};
+            const groupsDel = {};
             db.deliveries.forEach(d => {
-                if(!groups[d.groupId]) groups[d.groupId] = { vetName: d.vetName, date: d.date, items: [] };
-                groups[d.groupId].items.push(`${d.qty}x ${d.prodName} (${d.prodSize})`);
+                if(!groupsDel[d.groupId]) groupsDel[d.groupId] = { vetName: d.vetName, date: d.date, items: [] };
+                groupsDel[d.groupId].items.push(`${d.qty}x ${d.prodName} (${d.prodSize})`);
             });
-            Object.keys(groups).reverse().forEach(groupId => {
-                const g = groups[groupId];
-                delList.innerHTML += `
-                    <div class="list-item">
-                        <div class="item-info"><strong>${g.vetName}</strong><small style="color:#999;">${g.date}</small><br><small>${g.items.join(' | ')}</small></div>
-                        <button class="del-btn" onclick="deleteDelivery(${groupId})" title="Borrar y corregir">🗑️</button>
-                    </div>`;
+            Object.keys(groupsDel).reverse().forEach(groupId => {
+                const g = groupsDel[groupId];
+                delList.innerHTML += `<div class="list-item" style="background:#fff; padding:15px; border-radius:12px; margin-bottom:10px;"><div class="item-info"><strong>${g.vetName}</strong><small style="color:#999;">${g.date}</small><br><small>${g.items.join(' | ')}</small></div><button class="icon-btn del-btn" onclick="deleteDelivery(${groupId})">🗑️</button></div>`;
             });
 
-            // 4. Render Historial Devoluciones
             const retList = document.getElementById('returns-list'); retList.innerHTML = '';
-            if(db.returns.length === 0) retList.innerHTML = '<p style="text-align:center; color:#999;">No hay devoluciones.</p>';
             db.returns.slice().reverse().forEach(r => {
-                retList.innerHTML += `
-                    <div class="list-item">
-                        <div class="item-info"><strong>${r.vetName}</strong><small style="color:#999;">${r.date}</small><br><small>Devolvió: ${r.qty}x ${r.prodName}</small></div>
-                        <button class="del-btn" onclick="deleteReturn(${r.id})" title="Borrar y corregir">🗑️</button>
-                    </div>`;
+                retList.innerHTML += `<div class="list-item" style="background:#fff; padding:15px; border-radius:12px; margin-bottom:10px;"><div class="item-info"><strong>${r.vetName}</strong><small style="color:#999;">${r.date}</small><br><small>Devolvió: ${r.qty}x ${r.prodName}</small></div><button class="icon-btn del-btn" onclick="deleteReturn(${r.id})">🗑️</button></div>`;
             });
 
-            // 5. Actualizar Selects (Entregas)
+            // Selects
             const vetSelect = document.getElementById('d-vet'); const prodSelect = document.getElementById('d-product');
             vetSelect.innerHTML = '<option value="">Seleccioná Local...</option>' + db.vets.map(v => `<option value="${v.id}">${v.name}</option>`).join('');
-            prodSelect.innerHTML = '<option value="">Seleccioná Producto...</option>' + db.products.map(p => {
-                const entregado = db.deliveries.filter(d => d.prodId == p.id).reduce((sum, d) => sum + d.qty, 0);
-                const devuelto = db.returns.filter(r => r.prodId == p.id).reduce((sum, r) => sum + r.qty, 0);
-                const disp = p.stock - entregado + devuelto;
-                return `<option value="${p.id}">${p.name} (T:${p.size}) - Stock: ${disp}</option>`;
-            }).join('');
+            
+            // Productos para entregas (mostrar todos los talles)
+            let prodsHTML = '<option value="">Seleccioná Producto...</option>';
+            Object.values(grouped).forEach(g => {
+                g.variants.forEach(v => {
+                    prodsHTML += `<option value="${v.id}">${g.name} (T:${v.size} - ${v.color}) - Stock: ${v.disponible}</option>`;
+                });
+            });
+            prodSelect.innerHTML = prodsHTML;
 
-            // 6. Actualizar Selects (Devoluciones)
             const rVetSelect = document.getElementById('r-vet'); const rProdIn = document.getElementById('r-prod-in'); const rProdOut = document.getElementById('r-prod-out');
             rVetSelect.innerHTML = '<option value="">Seleccioná Local...</option>' + db.vets.map(v => `<option value="${v.id}">${v.name}</option>`).join('');
-            const prodsHTML = db.products.map(p => `<option value="${p.id}">${p.name} (T:${p.size}) - ${p.color}</option>`).join('');
-            rProdIn.innerHTML = '<option value="">Seleccioná Producto Devuelto...</option>' + prodsHTML;
-            rProdOut.innerHTML = '<option value="">--- No entrego nada a cambio ---</option>' + prodsHTML;
+            rProdIn.innerHTML = '<option value="">Seleccioná Devuelto...</option>' + prodsHTML.replace('Seleccioná Producto...', '');
+            rProdOut.innerHTML = '<option value="">--- No entrego nada a cambio ---</option>' + prodsHTML.replace('Seleccioná Producto...', '');
         }
 
         renderAll();
